@@ -13,6 +13,7 @@ import os.path as osp
 import numpy as np
 import onnxruntime
 from numpy.linalg import norm
+from pathlib import Path
 
 from ..model_zoo import model_zoo
 from ..utils import DEFAULT_MP_NAME, ensure_available
@@ -21,10 +22,32 @@ from .common import Face
 __all__ = ['FaceAnalysis']
 
 class FaceAnalysis:
-    def __init__(self, name=DEFAULT_MP_NAME, root='~/.insightface', allowed_modules=None, **kwargs):
+    """
+    @param name = name of the model, e.g. "antelopev2" and it's expected that
+    name is an immediate subdirectory (i.e. direct child) of root
+    @param root : str, directory path to directory containing "name"
+    """
+    def __init__(
+        self,
+        name=DEFAULT_MP_NAME,
+        root='~/.insightface',
+        allowed_modules=None,
+        default_path=None,
+        **kwargs
+        ):
+        # From help(onxxruntime.set_default_logger_severity):
+        # Sets the default logging severity. 0:Verbose, 1:Info, 2:Warning,
+        # 3:Error, 4:Fatal
         onnxruntime.set_default_logger_severity(3)
         self.models = {}
-        self.model_dir = ensure_available('models', name, root=root)
+        
+        if (default_path != None):
+            self.model_dir = ensure_available('models', name, root=root)
+        elif (Path(str(root)) / name).exists():
+            self.model_dir = str(Path(root) / name)
+        else:
+            raise RuntimeError("Invalid input for name, root (filepath)")
+
         onnx_files = glob.glob(osp.join(self.model_dir, '*.onnx'))
         onnx_files = sorted(onnx_files)
         for onnx_file in onnx_files:

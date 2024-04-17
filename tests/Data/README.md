@@ -1,0 +1,1 @@
+In this subdirectory, `insightface/tests/Data`, you would place the model, in binary format, that you want to test.
